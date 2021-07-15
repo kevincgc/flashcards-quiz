@@ -35,6 +35,8 @@ import java.util.Collections;
 import java.util.List;
 import java.awt.event.ActionEvent;
 import java.awt.Font;
+import javax.swing.Box;
+import java.awt.Component;
 
 public class Flashcard {
 
@@ -154,6 +156,8 @@ public class Flashcard {
 					i--;
 				}
 				readCard();
+				isShow = false;
+				setVisibility();
 			}
 		});
 		panel_1.add(prevButton);
@@ -177,6 +181,8 @@ public class Flashcard {
 					i++;
 				}
 				readCard();
+				isShow = false;
+				setVisibility();
 			}
 		});
 		panel_1.add(nextButton);
@@ -228,6 +234,8 @@ public class Flashcard {
 				Collections.shuffle(cards);
 				i = 0;
 				readCard();
+				isShow = false;
+				setVisibility();
 			}
 		});
 		panel_3.add(shuffleButton);
@@ -235,12 +243,14 @@ public class Flashcard {
 		JPanel panel_6 = new JPanel();
 		panel.add(panel_6);
 		
-		JButton btnNewButton = new JButton("Move Current Card To Deck...");
-		btnNewButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-			}
-		});
-		panel_6.add(btnNewButton);
+		Box verticalBox = Box.createVerticalBox();
+		panel_6.add(verticalBox);
+		
+		JButton btnNewButton_1 = new JButton("Move Current Card To Deck...");
+		verticalBox.add(btnNewButton_1);
+		
+		JButton btnNewButton_4 = new JButton("Copy Current Card To Deck...");
+		verticalBox.add(btnNewButton_4);
 		
 		JPanel panel_7 = new JPanel();
 		panel.add(panel_7);
@@ -320,7 +330,7 @@ public class Flashcard {
 		JLabel lblNewLabel_1 = new JLabel("New label");
 		toolBar.add(lblNewLabel_1);
 		
-		JButton autoButton = new JButton("Autocomplete (U)");
+		JButton autoButton = new JButton("Autocomplete 「う」");
 		autoButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if (!tf3.getText().isBlank()) {
@@ -429,7 +439,7 @@ public class Flashcard {
 		});
 		toolBar.add(autoButton);
 		
-		JButton btnAutocompleteru = new JButton("Autocomplete (RU)");
+		JButton btnAutocompleteru = new JButton("Autocomplete 「る」");
 		btnAutocompleteru.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if (tf3.getText().equals("る")) {
@@ -453,52 +463,52 @@ public class Flashcard {
 		panel_5.setLayout(new BoxLayout(panel_5, BoxLayout.Y_AXIS));
 		
 		tf1 = new JTextField();
-		tf1.setFont(new Font("Yu Mincho", Font.PLAIN, 14));
+		tf1.setFont(new Font("Yu Mincho", Font.PLAIN, 20));
 		panel_5.add(tf1);
 		tf1.setColumns(10);
 		
 		tf2 = new JTextField();
-		tf2.setFont(new Font("Yu Mincho", Font.PLAIN, 14));
+		tf2.setFont(new Font("Yu Mincho", Font.PLAIN, 20));
 		panel_5.add(tf2);
 		tf2.setColumns(10);
 		
 		tf3 = new JTextField();
-		tf3.setFont(new Font("Yu Mincho", Font.PLAIN, 14));
+		tf3.setFont(new Font("Yu Mincho", Font.PLAIN, 20));
 		panel_5.add(tf3);
 		tf3.setColumns(10);
 		
 		tf4 = new JTextField();
-		tf4.setFont(new Font("Yu Mincho", Font.PLAIN, 14));
+		tf4.setFont(new Font("Yu Mincho", Font.PLAIN, 20));
 		panel_5.add(tf4);
 		tf4.setColumns(10);
 		
 		tf5 = new JTextField();
-		tf5.setFont(new Font("Yu Mincho", Font.PLAIN, 14));
+		tf5.setFont(new Font("Yu Mincho", Font.PLAIN, 20));
 		panel_5.add(tf5);
 		tf5.setColumns(10);
 		
 		tf6 = new JTextField();
-		tf6.setFont(new Font("Yu Mincho", Font.PLAIN, 14));
+		tf6.setFont(new Font("Yu Mincho", Font.PLAIN, 20));
 		panel_5.add(tf6);
 		tf6.setColumns(10);
 		
 		tf7 = new JTextField();
-		tf7.setFont(new Font("Yu Mincho", Font.PLAIN, 14));
+		tf7.setFont(new Font("Yu Mincho", Font.PLAIN, 20));
 		panel_5.add(tf7);
 		tf7.setColumns(10);
 		
 		tf8 = new JTextField();
-		tf8.setFont(new Font("Yu Mincho", Font.PLAIN, 14));
+		tf8.setFont(new Font("Yu Mincho", Font.PLAIN, 20));
 		panel_5.add(tf8);
 		tf8.setColumns(10);
 		
 		tf9 = new JTextField();
-		tf9.setFont(new Font("Yu Mincho", Font.PLAIN, 14));
+		tf9.setFont(new Font("Yu Mincho", Font.PLAIN, 20));
 		panel_5.add(tf9);
 		tf9.setColumns(10);
 		
 		tf10 = new JTextField();
-		tf10.setFont(new Font("Yu Mincho", Font.PLAIN, 14));
+		tf10.setFont(new Font("Yu Mincho", Font.PLAIN, 20));
 		panel_5.add(tf10);
 		tf10.setColumns(10);
 	}
