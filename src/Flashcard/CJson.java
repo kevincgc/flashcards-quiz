@@ -1,9 +1,15 @@
 package Flashcard;
 
+import java.io.BufferedWriter;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.lang.reflect.Type;
 import java.util.List;
@@ -18,10 +24,14 @@ public class CJson {
 	static void writeFile(List<Card> list, String filename) {
 		try {
 			Gson gson = new GsonBuilder().setPrettyPrinting().create();
-			Writer writer = new FileWriter("src/cards/" + filename + ".json");
-			gson.toJson(list, writer);
-	        writer.flush();
-	        writer.close();
+			Writer out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("src/cards/" + filename + ".json"), "UTF-8"));
+				try {
+					gson.toJson(list, out);
+				} finally {
+					out.flush();
+				    out.close();
+				}
+
 		} catch (JsonIOException e) {
 			// TODO Auto-generated catch block
 			System.out.println("write json file exception");
@@ -42,11 +52,14 @@ public class CJson {
 			final Type REVIEW_TYPE = new TypeToken<List<Card>>() {}.getType();
 			Gson gson = new Gson();
 			JsonReader reader;
-			reader = new JsonReader(new FileReader("src/cards/" + filename + ".json"));
+			reader = new JsonReader(new InputStreamReader(new FileInputStream("src/cards/" + filename + ".json"), "UTF-8"));
 			List<Card> data = gson.fromJson(reader, REVIEW_TYPE); // contains the whole reviews list
 			//printJson(data); // prints to screen some values
 			return data;
 		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

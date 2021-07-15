@@ -23,18 +23,23 @@ import javax.swing.JTabbedPane;
 import javax.swing.JLabel;
 import java.awt.Color;
 import javax.swing.UIManager;
+import javax.swing.text.BadLocationException;
 
 import com.google.gson.Gson;
 
 import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.awt.event.ActionEvent;
+import java.awt.Font;
 
 public class Flashcard {
 
 	public JFrame frame;
-	private JTextField textField;
+	private JTextField jumpNum;
 	private final ButtonGroup buttonGroup = new ButtonGroup();
 	private JTextField tf1;
 	private JTextField tf10;
@@ -49,6 +54,8 @@ public class Flashcard {
 	private List<Card> cards;
 	private int i;
 	private String filename;
+	private JLabel countLabel;
+	private Boolean isShow;
 
 	/**
 	 * Launch the application.
@@ -75,6 +82,8 @@ public class Flashcard {
 		filename = "test";
 		initialize();
 		reloadCards();
+		isShow = false;
+		setVisibility();
 	}
 	
 	private void reloadCards() {
@@ -90,6 +99,7 @@ public class Flashcard {
 		tf5.setText(cards.get(i).jpTe.toString());
 		tf6.setText(cards.get(i).jpSimpNeg.toString());
 		tf7.setText(cards.get(i).jpParticle.toString());
+		updateFields();
 	}
 	
 	private void writeCard() {
@@ -101,6 +111,21 @@ public class Flashcard {
 		cards.get(i).jpTe = tf5.getText();
 		cards.get(i).jpSimpNeg = tf6.getText();
 		cards.get(i).jpParticle = tf7.getText();
+	}
+	
+	private void updateFields() {
+		countLabel.setText("Card: " + (i + 1) + " / " + cards.size());
+	}
+	
+	private void setVisibility() {
+		tf3.setVisible(isShow);
+		tf4.setVisible(isShow);
+		tf5.setVisible(isShow);
+		tf6.setVisible(isShow);
+		tf7.setVisible(isShow);
+		tf8.setVisible(isShow);
+		tf9.setVisible(isShow);
+		tf10.setVisible(isShow);
 	}
 
 
@@ -134,6 +159,13 @@ public class Flashcard {
 		panel_1.add(prevButton);
 		
 		JButton flipButton = new JButton("Flip Card");
+		flipButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				isShow = true;
+				setVisibility();
+				frame.revalidate();
+			}
+		});
 		panel_1.add(flipButton);
 		
 		JButton nextButton = new JButton("Next Card");
@@ -153,23 +185,49 @@ public class Flashcard {
 		panel.add(panel_2);
 		panel_2.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
 		
-		textField = new JTextField();
-		textField.setText("1");
-		panel_2.add(textField);
-		textField.setColumns(10);
+		jumpNum = new JTextField();
+		jumpNum.setText("1");
+		panel_2.add(jumpNum);
+		jumpNum.setColumns(10);
+		jumpNum.addFocusListener(new FocusListener() {
+			@Override
+			public void focusLost(FocusEvent e) {
+				if (jumpNum.getText() != null && jumpNum.getText().matches("[-+]?\\d*\\.?\\d+")) {
+					if (Integer.valueOf(jumpNum.getText()) < 1) {
+						jumpNum.setText("1");
+					} else if (Integer.valueOf(jumpNum.getText()) > cards.size()) {
+						jumpNum.setText(String.valueOf(cards.size()));
+					}				
+				} else {
+					jumpNum.setText("1");
+				}
+			}
+
+			@Override
+			public void focusGained(FocusEvent e) {}
+		});
 		
 		JButton jumpButton = new JButton("Jump");
+		jumpButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				i = Integer.valueOf(jumpNum.getText()) - 1;
+				reloadCards();
+			}
+		});
 		panel_2.add(jumpButton);
 		
 		JPanel panel_3 = new JPanel();
 		panel.add(panel_3);
 		
-		JLabel countLabel = new JLabel("Card: 000/123");
+		countLabel = new JLabel();
 		panel_3.add(countLabel);
 		
 		JButton shuffleButton = new JButton("Shuffle");
 		shuffleButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				Collections.shuffle(cards);
+				i = 0;
+				readCard();
 			}
 		});
 		panel_3.add(shuffleButton);
@@ -190,14 +248,34 @@ public class Flashcard {
 		JButton btnNewButton_2 = new JButton("Add Card");
 		btnNewButton_2.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if (tf1.getText().equals("") || tf1.getText().equals("verb")) {
-					System.out.println("k");
-				}
+				Gson gson = new Gson();
+				CardType newCardType = gson.fromJson(tf1.getText(), CardType.class);
+				String f2 = tf2.getText();
+				String f3 = tf3.getText();
+				String f4 = tf4.getText();
+				String f5 = tf5.getText();
+				String f6 = tf6.getText();
+				String f7 = tf7.getText();
+				Card newCard = new Card(newCardType, f2, f3, f4, f5, f6, f7);
+				cards.add(newCard);
+				CJson.writeFile(cards, filename);
+				i = cards.size() - 1;
+				updateFields();
 			}
 		});
 		panel_7.add(btnNewButton_2);
 		
 		JButton btnNewButton_3 = new JButton("Delete Card");
+		btnNewButton_3.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				cards.remove(i);
+				CJson.writeFile(cards, filename);
+				if (i == cards.size()) {
+					i--;
+				}
+				reloadCards();
+			}
+		});
 		panel_7.add(btnNewButton_3);
 		
 		JPanel panel_4 = new JPanel();
@@ -242,47 +320,185 @@ public class Flashcard {
 		JLabel lblNewLabel_1 = new JLabel("New label");
 		toolBar.add(lblNewLabel_1);
 		
+		JButton autoButton = new JButton("Autocomplete (U)");
+		autoButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if (!tf3.getText().isBlank()) {
+					String base = "";
+					try {
+						base = tf3.getText(0, tf3.getText().length() - 1);
+					} catch (BadLocationException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+					switch(tf3.getText().charAt(tf3.getText().length() - 1)) {
+					case 'う':
+						tf4.setText(base + "います");
+						break;
+					case 'つ':
+						tf4.setText(base + "ちます");
+						break;
+					case 'る':
+						tf4.setText(base + "ります");
+						break;
+					case 'く':
+						tf4.setText(base + "きます");
+						break;
+					case 'ぐ':
+						tf4.setText(base + "ぎます");
+						break;
+					case 'む':
+						tf4.setText(base + "みます");
+						break;
+					case 'ぶ':
+						tf4.setText(base + "びます");
+						break;
+					case 'ぬ':
+						tf4.setText(base + "にます");
+						break;
+					case 'す':
+						tf4.setText(base + "します");
+						break;
+					default:
+						tf4.setText("ERROR");
+					}
+					switch(tf3.getText().charAt(tf3.getText().length() - 1)) {
+					case 'う':
+						tf5.setText(base + "って");
+						break;
+					case 'つ':
+						tf5.setText(base + "って");
+						break;
+					case 'る':
+						tf5.setText(base + "って");
+						break;
+					case 'く':
+						tf5.setText(base + "いて");
+						break;
+					case 'ぐ':
+						tf5.setText(base + "いで");
+						break;
+					case 'む':
+						tf5.setText(base + "んで");
+						break;
+					case 'ぶ':
+						tf5.setText(base + "んで");
+						break;
+					case 'ぬ':
+						tf5.setText(base + "んで");
+						break;
+					case 'す':
+						tf5.setText(base + "して");
+						break;
+					default:
+						tf5.setText("ERROR");
+					}
+					switch(tf3.getText().charAt(tf3.getText().length() - 1)) {
+					case 'う':
+						tf6.setText(base + "わない");
+						break;
+					case 'つ':
+						tf6.setText(base + "たない");
+						break;
+					case 'る':
+						tf6.setText(base + "らない");
+						break;
+					case 'く':
+						tf6.setText(base + "かない");
+						break;
+					case 'ぐ':
+						tf6.setText(base + "がない");
+						break;
+					case 'む':
+						tf6.setText(base + "まない");
+						break;
+					case 'ぶ':
+						tf6.setText(base + "ばない");
+						break;
+					case 'ぬ':
+						tf6.setText(base + "なない");
+						break;
+					case 'す':
+						tf6.setText(base + "さない");
+						break;
+					default:
+						tf6.setText("ERROR");
+					}
+				}
+			}
+		});
+		toolBar.add(autoButton);
+		
+		JButton btnAutocompleteru = new JButton("Autocomplete (RU)");
+		btnAutocompleteru.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if (tf3.getText().equals("る")) {
+					String base = "";
+					try {
+						base = tf3.getText(0, tf3.getText().length() - 1);
+					} catch (BadLocationException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+					tf4.setText(base + "ます");
+					tf5.setText(base + "て");
+					tf6.setText(base + "ない");
+				}
+			}
+		});
+		toolBar.add(btnAutocompleteru);
+		
 		JPanel panel_5 = new JPanel();
 		frame.getContentPane().add(panel_5, BorderLayout.CENTER);
 		panel_5.setLayout(new BoxLayout(panel_5, BoxLayout.Y_AXIS));
 		
 		tf1 = new JTextField();
+		tf1.setFont(new Font("Yu Mincho", Font.PLAIN, 14));
 		panel_5.add(tf1);
 		tf1.setColumns(10);
 		
 		tf2 = new JTextField();
+		tf2.setFont(new Font("Yu Mincho", Font.PLAIN, 14));
 		panel_5.add(tf2);
 		tf2.setColumns(10);
 		
 		tf3 = new JTextField();
+		tf3.setFont(new Font("Yu Mincho", Font.PLAIN, 14));
 		panel_5.add(tf3);
 		tf3.setColumns(10);
 		
 		tf4 = new JTextField();
+		tf4.setFont(new Font("Yu Mincho", Font.PLAIN, 14));
 		panel_5.add(tf4);
 		tf4.setColumns(10);
 		
 		tf5 = new JTextField();
+		tf5.setFont(new Font("Yu Mincho", Font.PLAIN, 14));
 		panel_5.add(tf5);
 		tf5.setColumns(10);
 		
 		tf6 = new JTextField();
+		tf6.setFont(new Font("Yu Mincho", Font.PLAIN, 14));
 		panel_5.add(tf6);
 		tf6.setColumns(10);
 		
 		tf7 = new JTextField();
+		tf7.setFont(new Font("Yu Mincho", Font.PLAIN, 14));
 		panel_5.add(tf7);
 		tf7.setColumns(10);
 		
 		tf8 = new JTextField();
+		tf8.setFont(new Font("Yu Mincho", Font.PLAIN, 14));
 		panel_5.add(tf8);
 		tf8.setColumns(10);
 		
 		tf9 = new JTextField();
+		tf9.setFont(new Font("Yu Mincho", Font.PLAIN, 14));
 		panel_5.add(tf9);
 		tf9.setColumns(10);
 		
 		tf10 = new JTextField();
+		tf10.setFont(new Font("Yu Mincho", Font.PLAIN, 14));
 		panel_5.add(tf10);
 		tf10.setColumns(10);
 	}
