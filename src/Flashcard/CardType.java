@@ -1,0 +1,18 @@
+package Flashcard;
+
+import com.google.gson.Gson;
+import com.google.gson.annotations.SerializedName;
+
+public enum CardType {
+	@SerializedName("verb") VERB, 
+	@SerializedName("adj") ADJ, 
+	@SerializedName("noun") NOUN, 
+	@SerializedName("adv") ADV, 
+	@SerializedName("expression") EXPRESSION,
+	@SerializedName("error") ERROR;
+	
+	public String toString() {
+		Gson gson = new Gson();
+		return gson.toJson(this);
+	}
+}
