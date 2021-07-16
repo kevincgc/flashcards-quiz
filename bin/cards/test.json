@@ -25,5 +25,14 @@
     "jpTe": "行いて",
     "jpSimpNeg": "行かない",
     "jpParticle": ""
+  },
+  {
+    "type": "verb",
+    "en": "to go back; to return",
+    "jpDict": "かえる",
+    "jpMasu": "かえります",
+    "jpTe": "かえって",
+    "jpSimpNeg": "かえらない",
+    "jpParticle": ""
   }
 ]

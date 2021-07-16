@@ -5,9 +5,9 @@ import com.google.gson.annotations.SerializedName;
 
 public enum CardType {
 	@SerializedName("verb") VERB, 
-	@SerializedName("adj") ADJ, 
+	@SerializedName("adjective") ADJECTIVE, 
 	@SerializedName("noun") NOUN, 
-	@SerializedName("adv") ADV, 
+	@SerializedName("adverb") ADVERB, 
 	@SerializedName("expression") EXPRESSION,
 	@SerializedName("error") ERROR;
 	

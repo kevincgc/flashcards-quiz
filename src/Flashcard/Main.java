@@ -11,7 +11,7 @@ public class Main {
 //		Card c = new Card();
 //		List<Card> l = Arrays.asList(c);
 //		CJson.writeFile(l, "test");
-		Flashcard window = new Flashcard();
+		Flashcard window = new Flashcard("test1");
 		window.frame.setVisible(true);
 	}
 

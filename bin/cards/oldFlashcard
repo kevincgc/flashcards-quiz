@@ -30,8 +30,6 @@ import com.google.gson.Gson;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -41,91 +39,103 @@ import javax.swing.Box;
 import java.awt.Component;
 
 public class Flashcard {
+
 	public JFrame frame;
 	private JTextField jumpNum;
 	private final ButtonGroup buttonGroup = new ButtonGroup();
-	JRadioButton engRadio, kanaRadio, allRadio;
-	private JTextField[] tf;
-	private Card currentCard;
+	private JTextField tf1;
+	private JTextField tf10;
+	private JTextField tf2;
+	private JTextField tf3;
+	private JTextField tf4;
+	private JTextField tf5;
+	private JTextField tf6;
+	private JTextField tf7;
+	private JTextField tf8;
+	private JTextField tf9;
+	private List<Card> cards;
+	private int i;
 	private String filename;
 	private JLabel countLabel;
-	private CardDeck deck;
-	private JTextField tfType;
-	JLabel deckLabel;
-	
+	private Boolean isShow;
 
-	public Flashcard(String fname) {
-		filename = fname;
-		deck = new CardDeck(filename);
-		tf = new JTextField[10];
+	/**
+	 * Launch the application.
+	 */
+//	public static void main(String[] args) {
+//		EventQueue.invokeLater(new Runnable() {
+//			public void run() {
+//				try {
+//					Flashcard window = new Flashcard(null);
+//					window.frame.setVisible(true);
+//				} catch (Exception e) {
+//					e.printStackTrace();
+//				}
+//			}
+//		});
+//	}
+
+	/**
+	 * Create the application.
+	 * @param list 
+	 */
+	public Flashcard() {
+		i = 0;
+		filename = "test";
 		initialize();
-		loadCard(deck.getCard());
-		engRadio.setSelected(true);
-		updateVisibility(false);
+		reloadCards();
+		isShow = false;
+		setVisibility();
 	}
 	
-	private void updateCount() {
-		countLabel.setText("Card: " + (deck.getIndex() + 1) + " / " + deck.getSize());
-		deckLabel.setText(filename);
+	private void reloadCards() {
+		cards = CJson.readFile(filename);
+		readCard();
 	}
 	
-	private void loadCard(Card newCard) {
-		currentCard = newCard;
+	private void readCard() {
+		tf1.setText(cards.get(i).type.toString());
+		tf2.setText(cards.get(i).en.toString());
+		tf3.setText(cards.get(i).jpDict.toString());
+		tf4.setText(cards.get(i).jpMasu.toString());
+		tf5.setText(cards.get(i).jpTe.toString());
+		tf6.setText(cards.get(i).jpSimpNeg.toString());
+		tf7.setText(cards.get(i).jpParticle.toString());
+		updateFields();
+	}
+	
+	private void writeCard() {
 		Gson gson = new Gson();
-		tfType.setText(gson.toJson(currentCard.type));
-		for (int i = 0; i < 10; i++) {
-			tf[i].setText(currentCard.sArr[i]);
-		}
-		updateCount();
+		cards.get(i).type = gson.fromJson(tf1.getText(), CardType.class);
+		cards.get(i).en = tf2.getText();
+		cards.get(i).jpDict = tf3.getText();
+		cards.get(i).jpMasu = tf4.getText();
+		cards.get(i).jpTe = tf5.getText();
+		cards.get(i).jpSimpNeg = tf6.getText();
+		cards.get(i).jpParticle = tf7.getText();
+	}
+	
+	private void updateFields() {
+		countLabel.setText("Card: " + (i + 1) + " / " + cards.size());
+	}
+	
+	private void setVisibility() {
+		tf3.setVisible(isShow);
+		tf4.setVisible(isShow);
+		tf5.setVisible(isShow);
+		tf6.setVisible(isShow);
+		tf7.setVisible(isShow);
+		tf8.setVisible(isShow);
+		tf9.setVisible(isShow);
+		tf10.setVisible(isShow);
 	}
 
-	private Card generateCard() {
-		Gson gson = new Gson();
-		CardType cType = gson.fromJson(tfType.getText(), CardType.class);
-		String[] sArr = new String[Card.FIELD_COUNT];
-		for (int i = 0; i < Card.FIELD_COUNT; i++) {
-			sArr[i] = tf[i].getText();
-		}
-		return new Card(cType, sArr);
-	}
-	
-	private void updateVisibility(Boolean isShow) {
-		if (currentCard.type == CardType.VERB) {
-			if (allRadio.isSelected()) {
-				for (int i = 0; i < Card.FIELD_COUNT; i++) {
-					tf[i].setVisible(true);
-				}
-			} else if (engRadio.isSelected()) {
-				for (int i = 2; i < Card.FIELD_COUNT; i++) {
-					tf[i].setVisible(isShow);
-				}
-				for (int i = 0; i < 2; i++) {
-					tf[i].setVisible(true);
-				}
-			} else if (kanaRadio.isSelected()) {
-				for (int i = 0; i < 2; i++) {
-					tf[i].setVisible(isShow);
-				}
-				for (int i = 2; i < Card.FIELD_COUNT; i++) {
-					tf[i].setVisible(true);
-				}
-			}
-		}
-		frame.revalidate();
-	}
 
+	/**
+	 * Initialize the contents of the frame.
+	 */
 	private void initialize() {
 		frame = new JFrame();
-		frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-		frame.addWindowListener(new java.awt.event.WindowAdapter() {
-		    @Override
-		    public void windowClosing(java.awt.event.WindowEvent e) {
-		        deck.writeFile();
-		        //MainPage m = new MainPage();
-		        //m.setVisible(true);
-		        e.getWindow().dispose();
-		    }
-		});
 		frame.setBounds(100, 100, 704, 512);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
@@ -140,8 +150,14 @@ public class Flashcard {
 		JButton prevButton = new JButton("Prev Card");
 		prevButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				loadCard(deck.prevCard());
-				updateVisibility(false);
+				if (i == 0) {
+					i = cards.size() - 1;
+				} else {
+					i--;
+				}
+				readCard();
+				isShow = false;
+				setVisibility();
 			}
 		});
 		panel_1.add(prevButton);
@@ -149,7 +165,9 @@ public class Flashcard {
 		JButton flipButton = new JButton("Flip Card");
 		flipButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				updateVisibility(true);
+				isShow = true;
+				setVisibility();
+				frame.revalidate();
 			}
 		});
 		panel_1.add(flipButton);
@@ -157,8 +175,14 @@ public class Flashcard {
 		JButton nextButton = new JButton("Next Card");
 		nextButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				loadCard(deck.nextCard());
-				updateVisibility(false);
+				if (i == cards.size() - 1) {
+					i = 0;
+				} else {
+					i++;
+				}
+				readCard();
+				isShow = false;
+				setVisibility();
 			}
 		});
 		panel_1.add(nextButton);
@@ -177,8 +201,8 @@ public class Flashcard {
 				if (jumpNum.getText() != null && jumpNum.getText().matches("[-+]?\\d*\\.?\\d+")) {
 					if (Integer.valueOf(jumpNum.getText()) < 1) {
 						jumpNum.setText("1");
-					} else if (Integer.valueOf(jumpNum.getText()) > deck.getSize()) {
-						jumpNum.setText(String.valueOf(deck.getSize()));
+					} else if (Integer.valueOf(jumpNum.getText()) > cards.size()) {
+						jumpNum.setText(String.valueOf(cards.size()));
 					}				
 				} else {
 					jumpNum.setText("1");
@@ -192,7 +216,8 @@ public class Flashcard {
 		JButton jumpButton = new JButton("Jump");
 		jumpButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				loadCard(deck.getCard(Integer.valueOf(jumpNum.getText()) - 1));
+				i = Integer.valueOf(jumpNum.getText()) - 1;
+				reloadCards();
 			}
 		});
 		panel_2.add(jumpButton);
@@ -206,8 +231,11 @@ public class Flashcard {
 		JButton shuffleButton = new JButton("Shuffle");
 		shuffleButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				deck.shuffle();
-				loadCard(deck.getCard());
+				Collections.shuffle(cards);
+				i = 0;
+				readCard();
+				isShow = false;
+				setVisibility();
 			}
 		});
 		panel_3.add(shuffleButton);
@@ -230,8 +258,19 @@ public class Flashcard {
 		JButton btnNewButton_2 = new JButton("Add Card");
 		btnNewButton_2.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				deck.addCard(generateCard());
-				updateCount();
+				Gson gson = new Gson();
+				CardType newCardType = gson.fromJson(tf1.getText(), CardType.class);
+				String f2 = tf2.getText();
+				String f3 = tf3.getText();
+				String f4 = tf4.getText();
+				String f5 = tf5.getText();
+				String f6 = tf6.getText();
+				String f7 = tf7.getText();
+				Card newCard = new Card(newCardType, f2, f3, f4, f5, f6, f7);
+				cards.add(newCard);
+				CJson.writeFile(cards, filename);
+				i = cards.size() - 1;
+				updateFields();
 			}
 		});
 		panel_7.add(btnNewButton_2);
@@ -239,8 +278,12 @@ public class Flashcard {
 		JButton btnNewButton_3 = new JButton("Delete Card");
 		btnNewButton_3.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				deck.removeCard(generateCard());
-				updateCount();
+				cards.remove(i);
+				CJson.writeFile(cards, filename);
+				if (i == cards.size()) {
+					i--;
+				}
+				reloadCards();
 			}
 		});
 		panel_7.add(btnNewButton_3);
@@ -251,7 +294,8 @@ public class Flashcard {
 		JButton saveButton = new JButton("Save");
 		saveButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				deck.updateCard(generateCard());
+				writeCard();
+				CJson.writeFile(cards, filename);
 			}
 		});
 		panel_4.add(saveButton);
@@ -259,7 +303,7 @@ public class Flashcard {
 		JButton reloadButton = new JButton("Reload");
 		reloadButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				loadCard(deck.getCard());
+				reloadCards();
 			}
 		});
 		panel_4.add(reloadButton);
@@ -271,153 +315,124 @@ public class Flashcard {
 		switchButton.setBackground(UIManager.getColor("Button.background"));
 		toolBar.add(switchButton);
 		
-		engRadio = new JRadioButton("English");
-		engRadio.addItemListener(new ItemListener() {
-			@Override
-			public void itemStateChanged(ItemEvent e) {
-				if (e.getStateChange() == ItemEvent.SELECTED) {
-					updateVisibility(false);
-				}
-				
-			}
-		});
+		JRadioButton engRadio = new JRadioButton("English");
 		buttonGroup.add(engRadio);
+		engRadio.setSelected(true);
 		toolBar.add(engRadio);
 		
-		kanaRadio = new JRadioButton("Kana");
-		kanaRadio.addItemListener(new ItemListener() {
-			@Override
-			public void itemStateChanged(ItemEvent e) {
-				if (e.getStateChange() == ItemEvent.SELECTED) {
-					updateVisibility(false);
-				}
-				
-			}
-		});
+		JRadioButton kanaRadio = new JRadioButton("Kana");
 		buttonGroup.add(kanaRadio);
 		toolBar.add(kanaRadio);
-		
-		allRadio = new JRadioButton("Show All");
-		allRadio.addItemListener(new ItemListener() {
-			@Override
-			public void itemStateChanged(ItemEvent e) {
-				if (e.getStateChange() == ItemEvent.SELECTED) {
-					updateVisibility(false);
-				}
-				
-			}
-		});
-		buttonGroup.add(allRadio);
-		toolBar.add(allRadio);
 		
 		JLabel lblNewLabel = new JLabel("Deck:");
 		toolBar.add(lblNewLabel);
 		
-		deckLabel = new JLabel("New label");
-		toolBar.add(deckLabel);
+		JLabel lblNewLabel_1 = new JLabel("New label");
+		toolBar.add(lblNewLabel_1);
 		
 		JButton autoButton = new JButton("Autocomplete 「う」");
 		autoButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if (!tf[2].getText().isBlank()) {
+				if (!tf3.getText().isBlank()) {
 					String base = "";
 					try {
-						base = tf[2].getText(0, tf[2].getText().length() - 1);
+						base = tf3.getText(0, tf3.getText().length() - 1);
 					} catch (BadLocationException e1) {
+						// TODO Auto-generated catch block
 						e1.printStackTrace();
 					}
-					switch(tf[2].getText().charAt(tf[2].getText().length() - 1)) {
+					switch(tf3.getText().charAt(tf3.getText().length() - 1)) {
 					case 'う':
-						tf[3].setText(base + "います");
+						tf4.setText(base + "います");
 						break;
 					case 'つ':
-						tf[3].setText(base + "ちます");
+						tf4.setText(base + "ちます");
 						break;
 					case 'る':
-						tf[3].setText(base + "ります");
+						tf4.setText(base + "ります");
 						break;
 					case 'く':
-						tf[3].setText(base + "きます");
+						tf4.setText(base + "きます");
 						break;
 					case 'ぐ':
-						tf[3].setText(base + "ぎます");
+						tf4.setText(base + "ぎます");
 						break;
 					case 'む':
-						tf[3].setText(base + "みます");
+						tf4.setText(base + "みます");
 						break;
 					case 'ぶ':
-						tf[3].setText(base + "びます");
+						tf4.setText(base + "びます");
 						break;
 					case 'ぬ':
-						tf[3].setText(base + "にます");
+						tf4.setText(base + "にます");
 						break;
 					case 'す':
-						tf[3].setText(base + "します");
+						tf4.setText(base + "します");
 						break;
 					default:
-						tf[3].setText("ERROR");
+						tf4.setText("ERROR");
 					}
-					switch(tf[2].getText().charAt(tf[2].getText().length() - 1)) {
+					switch(tf3.getText().charAt(tf3.getText().length() - 1)) {
 					case 'う':
-						tf[4].setText(base + "って");
+						tf5.setText(base + "って");
 						break;
 					case 'つ':
-						tf[4].setText(base + "って");
+						tf5.setText(base + "って");
 						break;
 					case 'る':
-						tf[4].setText(base + "って");
+						tf5.setText(base + "って");
 						break;
 					case 'く':
-						tf[4].setText(base + "いて");
+						tf5.setText(base + "いて");
 						break;
 					case 'ぐ':
-						tf[4].setText(base + "いで");
+						tf5.setText(base + "いで");
 						break;
 					case 'む':
-						tf[4].setText(base + "んで");
+						tf5.setText(base + "んで");
 						break;
 					case 'ぶ':
-						tf[4].setText(base + "んで");
+						tf5.setText(base + "んで");
 						break;
 					case 'ぬ':
-						tf[4].setText(base + "んで");
+						tf5.setText(base + "んで");
 						break;
 					case 'す':
-						tf[4].setText(base + "して");
+						tf5.setText(base + "して");
 						break;
 					default:
-						tf[4].setText("ERROR");
+						tf5.setText("ERROR");
 					}
-					switch(tf[2].getText().charAt(tf[2].getText().length() - 1)) {
+					switch(tf3.getText().charAt(tf3.getText().length() - 1)) {
 					case 'う':
-						tf[5].setText(base + "わない");
+						tf6.setText(base + "わない");
 						break;
 					case 'つ':
-						tf[5].setText(base + "たない");
+						tf6.setText(base + "たない");
 						break;
 					case 'る':
-						tf[5].setText(base + "らない");
+						tf6.setText(base + "らない");
 						break;
 					case 'く':
-						tf[5].setText(base + "かない");
+						tf6.setText(base + "かない");
 						break;
 					case 'ぐ':
-						tf[5].setText(base + "がない");
+						tf6.setText(base + "がない");
 						break;
 					case 'む':
-						tf[5].setText(base + "まない");
+						tf6.setText(base + "まない");
 						break;
 					case 'ぶ':
-						tf[5].setText(base + "ばない");
+						tf6.setText(base + "ばない");
 						break;
 					case 'ぬ':
-						tf[5].setText(base + "なない");
+						tf6.setText(base + "なない");
 						break;
 					case 'す':
-						tf[5].setText(base + "さない");
+						tf6.setText(base + "さない");
 						break;
 					default:
-						tf[5].setText("ERROR");
+						tf6.setText("ERROR");
 					}
 				}
 			}
@@ -427,16 +442,17 @@ public class Flashcard {
 		JButton btnAutocompleteru = new JButton("Autocomplete 「る」");
 		btnAutocompleteru.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if (tf[2].getText().equals("る")) {
+				if (tf3.getText().equals("る")) {
 					String base = "";
 					try {
-						base = tf[2].getText(0, tf[2].getText().length() - 1);
+						base = tf3.getText(0, tf3.getText().length() - 1);
 					} catch (BadLocationException e1) {
+						// TODO Auto-generated catch block
 						e1.printStackTrace();
 					}
-					tf[3].setText(base + "ます");
-					tf[4].setText(base + "て");
-					tf[5].setText(base + "ない");
+					tf4.setText(base + "ます");
+					tf5.setText(base + "て");
+					tf6.setText(base + "ない");
 				}
 			}
 		});
@@ -446,60 +462,55 @@ public class Flashcard {
 		frame.getContentPane().add(panel_5, BorderLayout.CENTER);
 		panel_5.setLayout(new BoxLayout(panel_5, BoxLayout.Y_AXIS));
 		
-		tfType = new JTextField();
-		panel_5.add(tfType);
-		tfType.setColumns(10);
+		tf1 = new JTextField();
+		tf1.setFont(new Font("Yu Mincho", Font.PLAIN, 20));
+		panel_5.add(tf1);
+		tf1.setColumns(10);
 		
-		tf[0] = new JTextField();
-		tf[0].setFont(new Font("Yu Mincho", Font.PLAIN, 20));
-		panel_5.add(tf[0]);
-		tf[0].setColumns(10);
+		tf2 = new JTextField();
+		tf2.setFont(new Font("Yu Mincho", Font.PLAIN, 20));
+		panel_5.add(tf2);
+		tf2.setColumns(10);
 		
-		tf[1] = new JTextField();
-		tf[1].setFont(new Font("Yu Mincho", Font.PLAIN, 20));
-		panel_5.add(tf[1]);
-		tf[1].setColumns(10);
+		tf3 = new JTextField();
+		tf3.setFont(new Font("Yu Mincho", Font.PLAIN, 20));
+		panel_5.add(tf3);
+		tf3.setColumns(10);
 		
-		tf[2] = new JTextField();
-		tf[2].setFont(new Font("Yu Mincho", Font.PLAIN, 20));
-		panel_5.add(tf[2]);
-		tf[2].setColumns(10);
+		tf4 = new JTextField();
+		tf4.setFont(new Font("Yu Mincho", Font.PLAIN, 20));
+		panel_5.add(tf4);
+		tf4.setColumns(10);
 		
-		tf[3] = new JTextField();
-		tf[3].setFont(new Font("Yu Mincho", Font.PLAIN, 20));
-		panel_5.add(tf[3]);
-		tf[3].setColumns(10);
+		tf5 = new JTextField();
+		tf5.setFont(new Font("Yu Mincho", Font.PLAIN, 20));
+		panel_5.add(tf5);
+		tf5.setColumns(10);
 		
-		tf[4] = new JTextField();
-		tf[4].setFont(new Font("Yu Mincho", Font.PLAIN, 20));
-		panel_5.add(tf[4]);
-		tf[4].setColumns(10);
+		tf6 = new JTextField();
+		tf6.setFont(new Font("Yu Mincho", Font.PLAIN, 20));
+		panel_5.add(tf6);
+		tf6.setColumns(10);
 		
-		tf[5] = new JTextField();
-		tf[5].setFont(new Font("Yu Mincho", Font.PLAIN, 20));
-		panel_5.add(tf[5]);
-		tf[5].setColumns(10);
+		tf7 = new JTextField();
+		tf7.setFont(new Font("Yu Mincho", Font.PLAIN, 20));
+		panel_5.add(tf7);
+		tf7.setColumns(10);
 		
-		tf[6] = new JTextField();
-		tf[6].setFont(new Font("Yu Mincho", Font.PLAIN, 20));
-		panel_5.add(tf[6]);
-		tf[6].setColumns(10);
+		tf8 = new JTextField();
+		tf8.setFont(new Font("Yu Mincho", Font.PLAIN, 20));
+		panel_5.add(tf8);
+		tf8.setColumns(10);
 		
-		tf[7] = new JTextField();
-		tf[7].setFont(new Font("Yu Mincho", Font.PLAIN, 20));
-		panel_5.add(tf[7]);
-		tf[7].setColumns(10);
+		tf9 = new JTextField();
+		tf9.setFont(new Font("Yu Mincho", Font.PLAIN, 20));
+		panel_5.add(tf9);
+		tf9.setColumns(10);
 		
-		tf[8] = new JTextField();
-		tf[8].setFont(new Font("Yu Mincho", Font.PLAIN, 20));
-		panel_5.add(tf[8]);
-		tf[8].setColumns(10);
-		
-		tf[9] = new JTextField();
-		tf[9].setFont(new Font("Yu Mincho", Font.PLAIN, 20));
-		panel_5.add(tf[9]);
-		tf[9].setColumns(10);
-
+		tf10 = new JTextField();
+		tf10.setFont(new Font("Yu Mincho", Font.PLAIN, 20));
+		panel_5.add(tf10);
+		tf10.setColumns(10);
 	}
 
 }
