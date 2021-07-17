@@ -146,7 +146,7 @@ public class Flashcard {
 		DefaultListModel<String> listModel = new DefaultListModel<>();
 		CardDeck deck = new CardDeck(str);
 		for (int i = 0; i < deck.getSize(); i++) {
-			listModel.addElement(deck.getCard().getArr(0));
+			listModel.addElement(deck.getCard(i).getArr(0));
 		}
 		return listModel;
 	}
@@ -342,6 +342,7 @@ public class Flashcard {
 		btnNewButton_2.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				deck.addCard(generateCard());
+				loadCard(deck.getCard(deck.getSize() - 1));
 				updateCount();
 			}
 		});
@@ -351,6 +352,7 @@ public class Flashcard {
 		btnNewButton_3.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				deck.removeCard(generateCard());
+				loadCard(deck.getCard(deck.getIndex() - 1));
 				updateCount();
 			}
 		});
@@ -545,7 +547,7 @@ public class Flashcard {
 		JButton btnAutocompleteru = new JButton("Autocomplete 「る」");
 		btnAutocompleteru.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if (tf[2].getText().equals("る")) {
+				if (tf[2].getText().charAt(tf[2].getText().length() - 1) == 'る') {
 					String base = "";
 					try {
 						base = tf[2].getText(0, tf[2].getText().length() - 1);
