@@ -159,6 +159,7 @@ public class Flashcard {
 		    @Override
 		    public void windowClosing(java.awt.event.WindowEvent e) {
 		        deck.writeFile();
+		        Main.writeFile(filename);
 		        //MainPage m = new MainPage();
 		        //m.setVisible(true);
 		        e.getWindow().dispose();
@@ -306,6 +307,8 @@ public class Flashcard {
 					CardDeck newDeck = new CardDeck(newDeckFilename);
 					newDeck.addCard(currentCard);
 					newDeck.writeFile();
+					loadCard(deck.getCard());
+					updateVisibility(false);
 				}
 				updateCount();
 			}
@@ -313,7 +316,7 @@ public class Flashcard {
 		verticalBox.add(btnNewButton_1);
 		
 		JButton btnNewButton_4 = new JButton("Copy Current Card To Deck...");
-		btnNewButton_1.addActionListener(new ActionListener() {
+		btnNewButton_4.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				ArrayList<String> optionsArr = new ArrayList<String>();
 				File dir = new File("src/cards/");
@@ -329,6 +332,8 @@ public class Flashcard {
 					CardDeck newDeck = new CardDeck(newDeckFilename);
 					newDeck.addCard(currentCard);
 					newDeck.writeFile();
+					loadCard(deck.getCard());
+					updateVisibility(false);
 				}
 				updateCount();
 			}
@@ -352,7 +357,11 @@ public class Flashcard {
 		btnNewButton_3.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				deck.removeCard(generateCard());
-				loadCard(deck.getCard(deck.getIndex() - 1));
+				if (deck.getIndex() != 0) {
+					loadCard(deck.getCard(deck.getIndex() - 1));
+				} else {
+					loadCard(deck.getCard(deck.getIndex()));
+				}
 				updateCount();
 			}
 		});
@@ -361,7 +370,7 @@ public class Flashcard {
 		JPanel panel_4 = new JPanel();
 		panel.add(panel_4);
 		
-		JButton saveButton = new JButton("Save");
+		JButton saveButton = new JButton("Update Card");
 		saveButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				deck.updateCard(generateCard());
@@ -369,7 +378,7 @@ public class Flashcard {
 		});
 		panel_4.add(saveButton);
 		
-		JButton reloadButton = new JButton("Reload");
+		JButton reloadButton = new JButton("Reload Card");
 		reloadButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				loadCard(deck.getCard());
@@ -391,6 +400,15 @@ public class Flashcard {
 		switchButton.setBackground(UIManager.getColor("Button.background"));
 		toolBar.add(switchButton);
 		
+		JButton writeToFileButton = new JButton("Save");
+		writeToFileButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				deck.writeFile();
+			}
+		});
+		toolBar.add(writeToFileButton);
+		
+		
 		engRadio = new JRadioButton("English");
 		engRadio.addItemListener(new ItemListener() {
 			@Override
@@ -403,6 +421,7 @@ public class Flashcard {
 		});
 		buttonGroup.add(engRadio);
 		toolBar.add(engRadio);
+
 		
 		kanaRadio = new JRadioButton("Kana");
 		kanaRadio.addItemListener(new ItemListener() {
