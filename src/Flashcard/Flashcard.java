@@ -25,6 +25,7 @@ import javax.swing.DefaultListModel;
 import javax.swing.JTabbedPane;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 
 import java.awt.Color;
 import javax.swing.UIManager;
@@ -198,7 +199,6 @@ public class Flashcard {
 		});
 		rootPanel.add(navPanel, "nav");
 		/////////////////////////////////////////////////////////////
-		
 		JPanel panel = new JPanel();
 		cardsPanel.add(panel, BorderLayout.WEST);
 		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
@@ -289,9 +289,50 @@ public class Flashcard {
 		panel_6.add(verticalBox);
 		
 		JButton btnNewButton_1 = new JButton("Move Current Card To Deck...");
+		btnNewButton_1.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				ArrayList<String> optionsArr = new ArrayList<String>();
+				File dir = new File("src/cards/");
+				for (File file : dir.listFiles()) {
+					if (file.getName().endsWith((".json"))) {
+						optionsArr.add(file.getName().replaceFirst("[.][^.]+$", ""));
+					}
+				}
+				String[] options = optionsArr.toArray(new String[0]);
+				String newDeckFilename = (String)JOptionPane.showInputDialog(null, "Select list to move card to:", 
+		                "Move Card", JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+				if (!filename.equals(newDeckFilename)) {
+					deck.removeCard(currentCard);
+					CardDeck newDeck = new CardDeck(newDeckFilename);
+					newDeck.addCard(currentCard);
+					newDeck.writeFile();
+				}
+				updateCount();
+			}
+		});
 		verticalBox.add(btnNewButton_1);
 		
 		JButton btnNewButton_4 = new JButton("Copy Current Card To Deck...");
+		btnNewButton_1.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				ArrayList<String> optionsArr = new ArrayList<String>();
+				File dir = new File("src/cards/");
+				for (File file : dir.listFiles()) {
+					if (file.getName().endsWith((".json"))) {
+						optionsArr.add(file.getName().replaceFirst("[.][^.]+$", ""));
+					}
+				}
+				String[] options = optionsArr.toArray(new String[0]);
+				String newDeckFilename = (String)JOptionPane.showInputDialog(null, "Select list to copy card to:", 
+		                "Copy Card", JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+				if (!filename.equals(newDeckFilename)) {
+					CardDeck newDeck = new CardDeck(newDeckFilename);
+					newDeck.addCard(currentCard);
+					newDeck.writeFile();
+				}
+				updateCount();
+			}
+		});
 		verticalBox.add(btnNewButton_4);
 		
 		JPanel panel_7 = new JPanel();

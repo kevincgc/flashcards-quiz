@@ -1,4 +1,4 @@
-package Flashcard;
+package Unused;
 
 import java.awt.EventQueue;
 import java.awt.event.MouseAdapter;
@@ -13,6 +13,9 @@ import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+
+import Flashcard.CardDeck;
+
 import javax.swing.JList;
 
 public class DeckView {
