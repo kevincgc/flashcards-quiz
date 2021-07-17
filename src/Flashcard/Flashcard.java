@@ -8,6 +8,7 @@ import java.awt.BorderLayout;
 import javax.swing.JPanel;
 import javax.swing.JMenuBar;
 import javax.swing.JRadioButtonMenuItem;
+import javax.swing.JScrollPane;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JButton;
@@ -18,11 +19,17 @@ import java.awt.CardLayout;
 import javax.swing.JTextPane;
 import java.awt.GridLayout;
 import javax.swing.JToolBar;
+import javax.swing.ListSelectionModel;
 import javax.swing.ButtonGroup;
+import javax.swing.DefaultListModel;
 import javax.swing.JTabbedPane;
 import javax.swing.JLabel;
+import javax.swing.JList;
+
 import java.awt.Color;
 import javax.swing.UIManager;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.text.BadLocationException;
 
 import com.google.gson.Gson;
@@ -32,6 +39,9 @@ import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -52,7 +62,6 @@ public class Flashcard {
 	private CardDeck deck;
 	private JTextField tfType;
 	JLabel deckLabel;
-	
 
 	public Flashcard(String fname) {
 		filename = fname;
@@ -61,6 +70,13 @@ public class Flashcard {
 		initialize();
 		loadCard(deck.getCard());
 		engRadio.setSelected(true);
+		updateVisibility(false);
+	}
+	
+	public void reinitialize(String fname) {
+		filename = fname;
+		deck = new CardDeck(filename);
+		loadCard(deck.getCard());
 		updateVisibility(false);
 	}
 	
@@ -113,6 +129,27 @@ public class Flashcard {
 		}
 		frame.revalidate();
 	}
+	
+	private DefaultListModel<String> generateFilesModel() {
+		DefaultListModel<String> listModel = new DefaultListModel<>();
+		File dir = new File("src/cards/");
+		for (File file : dir.listFiles()) {
+			if (file.getName().endsWith((".json"))) {
+				listModel.addElement(file.getName().replaceFirst("[.][^.]+$", ""));
+			}
+		}
+		return listModel;
+	}
+	
+	private DefaultListModel<String> generateCardsModel(String str) {
+		DefaultListModel<String> listModel = new DefaultListModel<>();
+		CardDeck deck = new CardDeck(str);
+		for (int i = 0; i < deck.getSize(); i++) {
+			listModel.addElement(deck.getCard().getArr(0));
+		}
+		return listModel;
+	}
+
 
 	private void initialize() {
 		frame = new JFrame();
@@ -127,10 +164,43 @@ public class Flashcard {
 		    }
 		});
 		frame.setBounds(100, 100, 704, 512);
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		CardLayout cardLayout = new CardLayout();
+		JPanel rootPanel = new JPanel(cardLayout);
+		frame.getContentPane().add(rootPanel);
+		JPanel cardsPanel = new JPanel(new BorderLayout()); 
+		rootPanel.add(cardsPanel, "cards");
+		cardLayout.show(rootPanel,"cards");
+		/////////////////////////////////////////////////////////////
+		JPanel navPanel = new JPanel(new BorderLayout());
+		JList contentList = new JList();
+		navPanel.add(new JScrollPane(contentList), BorderLayout.CENTER);
+		contentList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		
+		JList filesList = new JList(generateFilesModel());
+		navPanel.add(new JScrollPane(filesList), BorderLayout.WEST);
+		filesList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		filesList.addListSelectionListener(new ListSelectionListener() {
+			@Override
+			public void valueChanged(ListSelectionEvent e) {
+				if (!e.getValueIsAdjusting()) {
+                    contentList.setModel(generateCardsModel((String)filesList.getSelectedValue()));
+                }
+			}
+        });
+		filesList.addMouseListener(new MouseAdapter() {
+		    public void mouseClicked(MouseEvent evt) {
+		        JList list = (JList)evt.getSource();
+		        if (evt.getClickCount() == 2) {
+		        	reinitialize((String)filesList.getSelectedValue());
+		        	cardLayout.show(rootPanel,"cards");
+		        }
+		    }
+		});
+		rootPanel.add(navPanel, "nav");
+		/////////////////////////////////////////////////////////////
 		
 		JPanel panel = new JPanel();
-		frame.getContentPane().add(panel, BorderLayout.WEST);
+		cardsPanel.add(panel, BorderLayout.WEST);
 		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 		
 		JPanel panel_1 = new JPanel();
@@ -265,9 +335,16 @@ public class Flashcard {
 		panel_4.add(reloadButton);
 		
 		JToolBar toolBar = new JToolBar();
-		frame.getContentPane().add(toolBar, BorderLayout.NORTH);
+		cardsPanel.add(toolBar, BorderLayout.NORTH);
+		//frame.getContentPane().add;
 		
 		JButton switchButton = new JButton("Swap View");
+		switchButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				deck.writeFile();
+				cardLayout.show(rootPanel, "nav");
+			}
+		});
 		switchButton.setBackground(UIManager.getColor("Button.background"));
 		toolBar.add(switchButton);
 		
@@ -443,7 +520,8 @@ public class Flashcard {
 		toolBar.add(btnAutocompleteru);
 		
 		JPanel panel_5 = new JPanel();
-		frame.getContentPane().add(panel_5, BorderLayout.CENTER);
+		cardsPanel.add(panel_5, BorderLayout.CENTER);
+		//frame.getContentPane().add;
 		panel_5.setLayout(new BoxLayout(panel_5, BoxLayout.Y_AXIS));
 		
 		tfType = new JTextField();
